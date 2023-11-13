@@ -1,0 +1,54 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+# some metadata about the template itself
+metadata:
+  name: env-demo
+  title: Create Dev env
+  description: EaaS template
+  labels:
+    componentName: 'guestbook'
+spec:
+  type: environment
+  system: backend-db
+  # these are the steps which are rendered in the frontend with the form input
+  parameters:
+    - title: name your ns
+      required:
+        - name
+      properties:
+        name:
+          title: Name
+          type: string
+          description: Unique name of the component
+          ui:autofocus: true
+          ui:options:
+            rows: 5
+    
+    - title: ns description
+      required:
+        - description
+      properties:
+        description:
+          title: Description
+          type: string
+          description: Namespace description
+          ui:autofocus: true
+          ui:options:
+            rows: 5
+    
+
+  # here's the steps that are executed in series in the scaffolder backend
+  steps:
+    - id: create-cti
+      name: Create EnvironmentTemplateInstance
+      action: environment:create
+      input:
+        name: ${{ parameters.name }}
+        description: ${{ parameters.description }}
+
+  output:
+    links:
+      - title: Open in catalog
+        icon: catalog
+        entityRef: environment:default/${{ parameters.name }}
+

@@ -31,6 +31,9 @@ import search from './plugins/search';
 import { PluginEnvironment } from './types';
 import { ServerPermissionClient } from '@backstage/plugin-permission-node';
 import { DefaultIdentityClient } from '@backstage/plugin-auth-node';
+import kubernetes from './plugins/kubernetes';
+import { hubApiClient } from '../../../plugins/catalog-backend-module-eaas/src/kubernetes';
+import { ClusterTemplateProvider } from '../../../plugins/catalog-backend-module-eaas/src/clusterTemplateProvider';
 
 function makeCreateEnv(config: Config) {
   const root = getRootLogger();
@@ -85,14 +88,31 @@ async function main() {
   const techdocsEnv = useHotMemoize(module, () => createEnv('techdocs'));
   const searchEnv = useHotMemoize(module, () => createEnv('search'));
   const appEnv = useHotMemoize(module, () => createEnv('app'));
+  const kubernetesEnv = useHotMemoize(module, () => createEnv('kubernetes'));
+
+  const [k8sClient, coreK8sClient] = hubApiClient(catalogEnv.config)
 
   const apiRouter = Router();
-  apiRouter.use('/catalog', await catalog(catalogEnv));
-  apiRouter.use('/scaffolder', await scaffolder(scaffolderEnv));
+  const ctProvider = new ClusterTemplateProvider(k8sClient, coreK8sClient)
+  apiRouter.use('/catalog', await catalog(catalogEnv, ctProvider));
+  apiRouter.use('/scaffolder', await scaffolder(scaffolderEnv, k8sClient, ctProvider));
   apiRouter.use('/auth', await auth(authEnv));
   apiRouter.use('/techdocs', await techdocs(techdocsEnv));
   apiRouter.use('/proxy', await proxy(proxyEnv));
   apiRouter.use('/search', await search(searchEnv));
+  apiRouter.use('/kubernetes', await kubernetes(kubernetesEnv));
+  apiRouter.use('/environment', async (req, res) => {
+    if(req.method === 'DELETE') {
+      const parts = req.url.split('/')
+      await ctProvider.delete(parts[parts.length-2], parts[parts.length-1])
+      res.send(200)
+    }
+    if(req.method === 'GET') {
+      const max = await ctProvider.getQuota()
+      res.status(200).send({ max })
+    }
+
+  });
 
   // Add backends ABOVE this line; this 404 handler is the catch-all fallback
   apiRouter.use(notFoundHandler());

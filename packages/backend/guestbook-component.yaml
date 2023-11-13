@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+# some metadata about the template itself
+metadata:
+  name: guestbook-go
+  title: Guestbook Go App
+  description: k8s example app
+spec:
+  type: website
+  lifecycle: production
+  owner: guests

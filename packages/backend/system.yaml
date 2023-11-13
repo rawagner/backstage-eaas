@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+# some metadata about the template itself
+metadata:
+  name: backend-db
+  title: Backend DB system
+  description: foobar
+spec:
+  owner: guests

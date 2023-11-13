@@ -29,6 +29,9 @@ import {
   EntityRelationWarning,
 } from '@backstage/plugin-catalog';
 import {
+  EntityListProvider,
+} from '@backstage/plugin-catalog-react';
+import {
   isGithubActionsAvailable,
   EntityGithubActionsContent,
 } from '@backstage/plugin-github-actions';
@@ -57,6 +60,9 @@ import {
 
 import { TechDocsAddons } from '@backstage/plugin-techdocs-react';
 import { ReportIssue } from '@backstage/plugin-techdocs-module-addons-contrib';
+import { EntityKubernetesContent } from '@backstage/plugin-kubernetes';
+import { EaasDetailsPage } from '@internal/plugin-eaas/src/components/EaaSDetailsPage/EaaSDetailsPage';
+import { ComponentEnvironmentsPage } from '@internal/plugin-eaas/src/components/ComponentEnvironmentsPage/ComponentEnvironmentsPage';
 
 const techdocsContent = (
   <EntityTechdocsContent>
@@ -175,6 +181,9 @@ const serviceEntityPage = (
     <EntityLayout.Route path="/docs" title="Docs">
       {techdocsContent}
     </EntityLayout.Route>
+    <EntityLayout.Route path="/kubernetes" title="Kubernetes">
+      <EntityKubernetesContent refreshIntervalMs={30000} />
+    </EntityLayout.Route>
   </EntityLayout>
 );
 
@@ -201,6 +210,12 @@ const websiteEntityPage = (
 
     <EntityLayout.Route path="/docs" title="Docs">
       {techdocsContent}
+    </EntityLayout.Route>
+
+    <EntityLayout.Route path="/environments" title="Environments">
+      <EntityListProvider>
+        <ComponentEnvironmentsPage />
+      </EntityListProvider>
     </EntityLayout.Route>
   </EntityLayout>
 );
@@ -376,6 +391,7 @@ const domainPage = (
 
 export const entityPage = (
   <EntitySwitch>
+    <EntitySwitch.Case if={isKind('environment')} children={<EaasDetailsPage />} />
     <EntitySwitch.Case if={isKind('component')} children={componentPage} />
     <EntitySwitch.Case if={isKind('api')} children={apiPage} />
     <EntitySwitch.Case if={isKind('group')} children={groupPage} />

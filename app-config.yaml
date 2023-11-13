@@ -67,6 +67,10 @@ auth:
   providers: {}
 
 scaffolder:
+  defaultAuthor:
+    name: rawagner # Defaults to `Scaffolder`
+    email: rawagner@redhat.com # Defaults to `scaffolder@backstage.io`
+  defaultCommitMessage: "Update catalog" # Defaults to 'Initial commit'
   # see https://backstage.io/docs/features/software-templates/configuration for software template options
 
 catalog:
@@ -74,7 +78,7 @@ catalog:
     entityFilename: catalog-info.yaml
     pullRequestBranchName: backstage-integration
   rules:
-    - allow: [Component, System, API, Resource, Location]
+    - allow: [Component, System, API, Resource, Location, Template]
   locations:
     # Local example data, file locations are relative to the backend process, typically `packages/backend`
     - type: file
@@ -92,6 +96,15 @@ catalog:
       rules:
         - allow: [User, Group]
 
+    - type: file
+      target: template.yaml # Backstage will expect the file to be in packages/backend/template.yaml
+
+    - type: file
+      target: system.yaml
+
+    - type: file
+      target: guestbook-component.yaml
+      
     ## Uncomment these lines to add more example data
     # - type: url
     #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all.yaml
@@ -101,3 +114,17 @@ catalog:
     #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/acme-corp.yaml
     #   rules:
     #     - allow: [User, Group]
+
+kubernetes:
+  serviceLocatorMethod:
+    type: 'multiTenant'
+  clusterLocatorMethods:
+    - type: 'config'
+      clusters:
+        # highlight-add-start
+        - name: rw5
+          # Other cluster configurations
+          url: <cluster_api_URL>
+          serviceAccountToken: <sa_token>
+          skipTLSVerify: true
+          authProvider: 'serviceAccount'
